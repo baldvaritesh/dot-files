@@ -21,6 +21,107 @@ install_apt_packages() {
     grep -vE '^\s*(#|$)' "$PACKAGES_COMMON" | xargs -r sudo apt-get install -y
 }
 
+github_latest_release() {
+    local repo=$1
+    curl -fsSL "https://api.github.com/repos/$repo/releases/latest"
+}
+
+github_latest_tag() {
+    local repo=$1
+    github_latest_release "$repo" | jq -r '.tag_name | sub("^v"; "")'
+}
+
+github_latest_asset_url() {
+    local repo=$1
+    local asset_regex=$2
+    github_latest_release "$repo" | jq -r --arg regex "$asset_regex" '
+        .assets[]
+        | select(.name | test($regex))
+        | .browser_download_url
+    ' | head -n 1
+}
+
+install_deb_from_github_latest() {
+    local name=$1
+    local command_name=$2
+    local repo=$3
+    local asset_regex=$4
+    local current_version=""
+    local latest_version
+    local url
+    local deb_path
+
+    latest_version="$(github_latest_tag "$repo")"
+    if command -v "$command_name" >/dev/null 2>&1; then
+        current_version="$("$command_name" --version | head -n 1 | grep -Eo '[0-9]+(\.[0-9]+)+' | head -n 1 || true)"
+    fi
+
+    if [ "$current_version" = "$latest_version" ]; then
+        log "$name $latest_version already installed"
+        return
+    fi
+
+    url="$(github_latest_asset_url "$repo" "$asset_regex")"
+    if [ -z "$url" ]; then
+        echo "Could not find release asset for $name in $repo matching $asset_regex" >&2
+        exit 1
+    fi
+
+    log "Installing $name $latest_version from GitHub"
+    deb_path="$(mktemp "/tmp/${name}.XXXXXX.deb")"
+    curl -fsSL "$url" -o "$deb_path"
+    sudo apt install -y "$deb_path"
+    rm -f "$deb_path"
+}
+
+install_fzf_from_github_latest() {
+    local current_version=""
+    local latest_version
+    local url
+    local archive_path
+    local extract_dir
+
+    latest_version="$(github_latest_tag "junegunn/fzf")"
+    if command -v fzf >/dev/null 2>&1; then
+        current_version="$(fzf --version | head -n 1 | grep -Eo '[0-9]+(\.[0-9]+)+' | head -n 1 || true)"
+    fi
+
+    if [ "$current_version" = "$latest_version" ]; then
+        log "fzf $latest_version already installed"
+        return
+    fi
+
+    url="$(github_latest_asset_url "junegunn/fzf" '^fzf-.*-linux_amd64\.tar\.gz$')"
+    if [ -z "$url" ]; then
+        echo "Could not find fzf linux amd64 release asset" >&2
+        exit 1
+    fi
+
+    log "Installing fzf $latest_version from GitHub"
+    archive_path="$(mktemp /tmp/fzf.XXXXXX.tar.gz)"
+    extract_dir="$(mktemp -d /tmp/fzf.XXXXXX)"
+    curl -fsSL "$url" -o "$archive_path"
+    tar -xzf "$archive_path" -C "$extract_dir"
+    sudo install -m 0755 "$extract_dir/fzf" /usr/local/bin/fzf
+    rm -rf "$archive_path" "$extract_dir"
+}
+
+install_modern_cli_tools() {
+    install_deb_from_github_latest \
+        "ripgrep" \
+        "rg" \
+        "BurntSushi/ripgrep" \
+        '^ripgrep_.*_amd64\.deb$'
+
+    install_deb_from_github_latest \
+        "fd" \
+        "fd" \
+        "sharkdp/fd" \
+        '^fd_.*_amd64\.deb$'
+
+    install_fzf_from_github_latest
+}
+
 install_1password_app() {
     if command -v 1password >/dev/null 2>&1; then
         log "1Password app already installed"
@@ -108,6 +209,7 @@ EOF
 main() {
     validate_inputs "$@"
     install_apt_packages
+    install_modern_cli_tools
     install_1password_app
     install_1password_cli
     install_oh_my_zsh

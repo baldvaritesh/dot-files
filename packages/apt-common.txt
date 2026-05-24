@@ -1,10 +1,7 @@
 git
 curl
 zsh
-fzf
 tmux
-ripgrep
-fd-find
 bat
 jq
 unzip
