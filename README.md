@@ -37,8 +37,11 @@ item = "AWS Private Key"
 vault = "Work"
 ```
 
-Use the exact item names from 1Password. Restart 1Password or toggle the SSH agent off and on after editing the file.
-Verify the agent (Note that the SSH_AUTH_SOCK) will be needed to talk to the 1password agent:
+Use the exact item names from 1Password. Restart 1Password or toggle the SSH
+agent off and on after editing the file.
+
+Verify the agent (Note that the SSH_AUTH_SOCK) will be needed to talk to the
+1password agent:
 
 ```sh
 SSH_AUTH_SOCK="$HOME/.1password/agent.sock" ssh-add -L
