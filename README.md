@@ -54,6 +54,7 @@ IdentityAgent ~/.1password/agent.sock
 
 ```sh
 git clone git@github.com:baldvaritesh/work-contexts.git ~/work-contexts
+mkdir -p ~/.ssh/config.d ~/.config/work-contexts
 ln -s ~/work-contexts/ssh/config ~/.ssh/config.d/work.conf
 ln -s ~/work-contexts/contexts/work-contexts.json ~/.config/work-contexts/work-contexts.json
 ```
