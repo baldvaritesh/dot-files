@@ -1,0 +1,15 @@
+path_prepend() {
+    [ -d "$1" ] || return 
+    case ":$PATH:" in 
+        *":$1:"*) ;;
+        *) export PATH="$1:$PATH" ;;
+    esac
+}
+
+path_prepend "$HOME/bin"
+path_prepend "$HOME/.local/bin"
+path_prepend "$HOME/go/bin"
+
+[ -r "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+unset -f path_prepend
