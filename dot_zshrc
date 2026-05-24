@@ -1,6 +1,7 @@
 source "$HOME/.zsh/default-oh-my.zsh"
-# source "$HOME/.zsh/fzf.zsh"
-# source "$HOME/.zsh/aliases.zsh"
+source "$HOME/.zsh/path.zsh"
+source "$HOME/.zsh/fzf.zsh"
+source "$HOME/.zsh/aliases.zsh"
 # source "$HOME/.zsh/env-functions.zsh"
 # source "$HOME/.zsh/work-functions.zsh"
 
