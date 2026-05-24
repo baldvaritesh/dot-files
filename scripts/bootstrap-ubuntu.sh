@@ -70,6 +70,7 @@ install_deb_from_github_latest() {
     log "Installing $name $latest_version from GitHub"
     deb_path="$(mktemp "/tmp/${name}.XXXXXX.deb")"
     curl -fsSL "$url" -o "$deb_path"
+    chmod 0644 "$deb_path"
     sudo apt install -y "$deb_path"
     rm -f "$deb_path"
 }
@@ -102,7 +103,7 @@ install_fzf_from_github_latest() {
     extract_dir="$(mktemp -d /tmp/fzf.XXXXXX)"
     curl -fsSL "$url" -o "$archive_path"
     tar -xzf "$archive_path" -C "$extract_dir"
-    sudo install -m 0755 "$extract_dir/fzf" /usr/local/bin/fzf
+    sudo install -o root -g root -m 0755 "$extract_dir/fzf" /usr/local/bin/fzf
     rm -rf "$archive_path" "$extract_dir"
 }
 
